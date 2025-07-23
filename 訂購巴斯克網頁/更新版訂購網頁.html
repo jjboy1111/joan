@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <title>安安的巴斯克天地訂購網</title>
+    <!-- 載入 jsPDF UMD 版、autoTable 外掛與 html2canvas -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&display=swap"
+      rel="stylesheet"
+    />
+
+   
+    <style>
+      .site-title {
+        text-align: center;
+        font-size: 42px;
+        color: #181616;
+        text-shadow: 0 0 1px #a0aa17, 0 0 20px #b68b3b;
+        animation: sparkle 15s infinite alternate;
+        margin-top: 10px;
+        font-family: "Ma Shan Zheng", cursive;
+      }
+      .site-title ruby {
+        font-size: 42px; /* 主標題大小 */
+        margin: 0 1px;
+      }
+
+      .site-title rt {
+        font-size: 10px; /* 注音小小顯示 */
+        color: #8d0a0a;
+        font-weight: normal;
+        
+      }
+      body {
+        max-width: 1500px;
+        margin: auto;
+        padding: 10px;
+        font-family: "微軟正黑體", Arial, sans-serif;
+        padding: 20px;
+      }
+      label {
+        display: block;
+        margin: 10px 0 5px;
+      }
+      input,
+      button {
+        padding: 5px;
+        font-size: 16px;
+      }
+      .image-row {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap; /* ✅ 允許自動換行 */
+        gap: 20px;
+        margin: 30px 0;
+      }
+      .image-box {
+        position: relative;
+        text-align: center;
+        font-size: 16px;
+        cursor: pointer;
+      }
+      .image-box img {
+        width: 100%;
+        max-width: 250px;
+        height: auto;
+        border-radius: 1px;
+        box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+        transition: transform 0.1s;
+      }
+      .image-box img:hover {
+        transform: scale(1.05);
+      }
+
+      .site-header {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0px;
+        margin-top: 10px;
+        margin-bottom: -40px;
+      }
+
+      .logo-left {
+        height: 60px;
+        object-fit: contain;
+        margin-top: -20px;
+      }
+
+      .price {
+        font-size: 18px;
+        font-weight: 700;
+        color: #d9534f;
+        margin: 0;
+      }
+      #cart,
+      #final-order,
+      #history {
+        margin-top: 30px;
+        padding: 15px;
+        border: 0px solid #ccc;
+      }
+      #submit-button {
+        margin: 10px 5px 0;
+        padding: 10px 20px;
+        font-size: 16px;
+        background: #007bff;
+        color: #fff;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        display: none;
+      }
+      #submit-button:hover {
+        background: #0056b3;
+      }
+      #reload-button {
+        margin: 10px 5px 0;
+        padding: 10px 20px;
+        font-size: 16px;
+        background-color: #007bff;
+        color: #fff;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        display: none;
+      }
+
+      #reload-button:hover {
+        background-color: #0056b3;
+      }
+      table {
+        margin: 10px auto;
+        border-collapse: collapse;
+        width: 100%;
+        overflow-x: auto;
+        display: block;
+      }
+      th,
+      td {
+        border: 1px solid #bb1212;
+        padding: 8px 12px;
+        text-align: center;
+      }
+      th {
+        background: #eee;
+      }
+      .btn-action {
+        padding: 4px 8px;
+        font-size: 14px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        margin: 0 2px;
+      }
+      .btn-increase {
+        background: #5cb85c;
+        color: #fff;
+      }
+      .btn-decrease {
+        background: #f0ad4e;
+        color: #fff;
+      }
+      .btn-delete {
+        background: #cf0f0f;
+        color: #fff;
+      }
+      .body {
+        background-image: url("背景2.png"); /* 替換為你的圖片路徑 */
+        background-repeat: no-repeat; /* 可選，防止圖片重複 */
+        background-size: cover; /* 可選，調整圖片大小以覆蓋整個背景 */
+        /* 更多樣式設定，如背景位置等 */
+      }
+
+      .btn-add {
+        background: #28a745;
+        color: #fff;
+        border: none;
+        padding: 6px 12px;
+        border-radius: 4px;
+        cursor: pointer;
+        margin-top: 5px;
+      }
+
+      .tooltip {
+        visibility: hidden;
+        width: 200px;
+        background: rgba(0, 0, 0, 0.8);
+        color: #fff;
+        text-align: left;
+        border-radius: 4px;
+        padding: 5px;
+        position: absolute;
+        bottom: 110%;
+        left: 50%;
+        transform: translateX(-50%);
+        white-space: normal;
+        z-index: 10;
+        font-size: 14px;
+      }
+      .image-box:hover .tooltip {
+        visibility: visible;
+      }
+      .btn-add {
+        background: #28a745;
+        color: #fff;
+        border: none;
+        padding: 6px 12px;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      .btn-add:hover {
+        background: #218838;
+      }
+      #ad-wall {
+        display: flex;
+        width: 35%;
+        height: 500px;
+        float: left;
+        margin-top: 10px;
+      }
+      #ad-wall img {
+        width: 100%;
+        height: auto;
+        border: 1px solid rgb(81, 95, 16);
+      }
+
+      @media (max-width: 768px) {
+        #ad-wall {
+          float: none;
+          display: block;
+          width: 100%;
+          text-align: center;
+          margin: 10px 0;
+        }
+        .ad-mobile-wrap {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+        }
+      }
+
+      .marquee-box {
+        width: 90%;
+        max-width: 1000px;
+        height: 40px;
+        overflow: hidden;
+        position: relative;
+        margin: 20px auto;
+        border: 2px solid #d9534f;
+        background-color: #fff6f6;
+        border-radius: 1px;
+        display: flex;
+        align-items: center;
+      }
+
+      .marquee-text {
+        white-space: nowrap;
+        display: inline-block;
+        padding-left: 100%;
+        animation: scroll-left 8s linear infinite;
+        font-size: 18px;
+        color: #b22222;
+        font-weight: bold;
+      }
+      @keyframes scroll-left {
+        0% {
+          transform: translateX(0%);
+        }
+        100% {
+          transform: translateX(-100%);
+        }
+      }
+      .contact-footer {
+        color: #333;
+        padding: 20px;
+        text-align: center;
+        font-size: 24px;
+        font-size: clamp(12px, 2.5vw, 24px); /* 根據螢幕自動縮放 */
+        margin-top: 40px;
+      }
+
+      /* 回到上方按鈕 */
+      #toTopBtn {
+        position: fixed;
+        bottom: 25px;
+        right: 25px;
+        z-index: 100;
+        background: none;
+        border: none;
+        padding: 0;
+        cursor: pointer;
+      }
+      #toTopBtn img {
+        width: 60px; /* 可自行調整大小 */
+        height: auto;
+        border-radius: 1%;
+
+        transition: transform 0.2s ease;
+      }
+      #toTopBtn img:hover {
+        transform: scale(1.1);
+      }
+    </style>
+  </head>
+
+  <body class="body">
+    <div class="site-header">
+      <img src="logo.png" alt="Logo" class="logo-left" />
+      <h1 class="site-title">
+        <ruby>珏<rt>ㄐㄩㄝˊ</rt></ruby>
+        の
+        <ruby>好<rt></rt></ruby>
+        <ruby>吃<rt></rt></ruby>
+        <ruby>手<rt></rt></ruby>
+        <ruby>感<rt></rt></ruby>
+        <ruby>巴<rt></rt></ruby>
+        <ruby>斯<rt></rt></ruby>
+        <ruby>克<rt></rt></ruby>
+        <ruby>蛋<rt></rt></ruby>
+        <ruby>糕<rt></rt></ruby>
+      </h1>
+      <img src="logo.png" alt="Logo" class="logo-left" />
+    </div>
+
+    <hr style="border: 1px solid #daa748; margin-top: 30px" />
+    <h2>📦 請選擇商品並填寫訂購資訊</h2>
+
+    <label for="name">取貨人：</label>
+    <input id="name" placeholder="請輸入取貨代稱" />
+    <label for="address">取貨及聯絡方式：</label>
+    <input id="address" placeholder="請輸入取貨及聯絡方式" />
+    <br />
+    <div class="marquee-box">
+      <div class="marquee-text">
+        🎉 熱銷商品限量供應中！豆漿口味基底的巴斯克蛋糕再便宜20元哦!!
+      </div>
+    </div>
+    <div id="ad-wall">
+      <img id="ad-image" src="原味.jpg" alt="廣告" />
+    </div>
+
+    <div class="image-row">
+      <div class="image-box">
+        <img src="原味.jpg" alt="商品1" />
+        <p>原味巴斯克蛋糕(蜂蜜腰果)</p>
+        <div class="price">NT$ 220</div>
+        <button
+          class="btn-add"
+          onclick="promptQuantity('原味巴斯克蛋糕(蜂蜜腰果)',220)"
+        >
+          加入購物車
+        </button>
+        <span class="tooltip"
+          >成分：澳洲奶油乳酪、法國鮮奶油、本土甘蔗糖、紅殼金鑽膠原雞蛋、百花蜜、手工炒腰果、檸檬汁、玉米粉</span
+        >
+      </div>
+      <div class="image-box">
+        <img src="芝麻.jpg" alt="商品2" />
+        <p>養生芝麻巴斯克蛋糕</p>
+        <div class="price">NT$ 210</div>
+        <button
+          class="btn-add"
+          onclick="promptQuantity('養生芝麻巴斯克蛋糕',210)"
+        >
+          加入購物車
+        </button>
+        <span class="tooltip"
+          >成分：澳洲奶油乳酪、法國鮮奶油、本土甘蔗糖、紅殼金鑽膠原雞蛋、里仁黑芝麻、檸檬汁、玉米粉</span
+        >
+      </div>
+      <div class="image-box">
+        <img src="黑金剛花生.jpg" alt="商品3" />
+        <p>黑金剛花生巴斯克蛋糕</p>
+        <div class="price">NT$ 250</div>
+        <button
+          class="btn-add"
+          onclick="promptQuantity('黑金剛花生巴斯克蛋糕',250)"
+        >
+          加入購物車
+        </button>
+        <span class="tooltip"
+          >成分：澳洲奶油乳酪、法國鮮奶油、本土甘蔗糖、紅殼金鑽膠原雞蛋、黑金剛花生醬、檸檬汁、玉米粉</span
+        >
+      </div>
+    </div>
+    <div class="image-row">
+      <div class="image-box">
+        <img src="原味.jpg" alt="商品1" />
+        <p>原味豆漿巴斯克蛋糕(蜂蜜腰果)</p>
+        <div class="price">NT$ 200</div>
+        <button
+          class="btn-add"
+          onclick="promptQuantity('原味豆漿巴斯克蛋糕(蜂蜜腰果)',200)"
+        >
+          加入購物車
+        </button>
+        <span class="tooltip"
+          >成分：澳洲奶油乳酪、濃豆漿、本土甘蔗糖、紅殼金鑽膠原雞蛋、百花蜜、手工炒腰果、檸檬汁、玉米粉</span
+        >
+      </div>
+      <div class="image-box">
+        <img src="芝麻.jpg" alt="商品2" />
+        <p>養生芝麻豆漿巴斯克蛋糕</p>
+        <div class="price">NT$ 190</div>
+        <button
+          class="btn-add"
+          onclick="promptQuantity('養生芝麻豆漿巴斯克蛋糕',190)"
+        >
+          加入購物車
+        </button>
+        <span class="tooltip"
+          >成分：澳洲奶油乳酪、濃豆漿、本土甘蔗糖、紅殼金鑽膠原雞蛋、里仁黑芝麻、檸檬汁、玉米粉</span
+        >
+      </div>
+      <div class="image-box">
+        <img src="黑金剛花生.jpg" alt="商品3" />
+        <p>黑金剛花生豆漿巴斯克蛋糕</p>
+        <div class="price">NT$ 230</div>
+        <button
+          class="btn-add"
+          onclick="promptQuantity('黑金剛花生豆漿巴斯克蛋糕',230)"
+        >
+          加入購物車
+        </button>
+        <span class="tooltip"
+          >成分：澳洲奶油乳酪、濃豆漿、本土甘蔗糖、紅殼金鑽膠原雞蛋、黑金剛花生醬、檸檬汁、玉米粉</span
+        >
+      </div>
+    </div>
+    <div id="cart"></div>
+    <button id="submit-button" onclick="submitOrder()">送出訂單</button>
+    <button id="reload-button" onclick="reloadPage()">重新整理</button>
+    <div id="final-order"></div>
+    <div id="history"></div>
+
+    <script>
+      let cart = {};
+      let orderCount = 0;
+      let history = [];
+      let lastOrderId = "";
+      let lastTotal = 0;
+      const formatCurrency = (n) => n.toLocaleString("zh-TW");
+      const getTimestampId = () => {
+        const now = new Date();
+        const ts = now
+          .toISOString()
+          .replace(/[-T:.Z]/g, "")
+          .slice(0, 14);
+        orderCount++;
+        return `ORD${ts}-${String(orderCount).padStart(3, "0")}`;
+      };
+
+      function promptQuantity(name, price) {
+        const q = parseInt(prompt(`請輸入「${name}」的數量：`, "1"));
+        if (q > 0) {
+          cart[name] = cart[name]
+            ? { price, quantity: cart[name].quantity + q }
+            : { price, quantity: q };
+          renderCart();
+        } else alert("請輸入正確數字");
+      }
+
+      function renderCart() {
+        const user =
+          document.getElementById("name").value.trim() || "（未填寫）";
+        const keys = Object.keys(cart);
+        const cartDiv = document.getElementById("cart");
+        const btnSubmit = document.getElementById("submit-button");
+        const btnReload = document.getElementById("reload-button");
+        if (!keys.length) {
+          cartDiv.innerHTML = "<p>尚未選擇商品。</p>";
+          btnSubmit.style.display = "none";
+          btnReload.style.display = "none";
+          return;
+        }
+        let total = 0;
+        let html = `<h3>🛒 購物車明細</h3><p><strong>姓名：</strong>${user}</p><table><thead><tr><th>商品</th><th>單價</th><th>數量</th><th>小計</th><th>操作</th></tr></thead><tbody>`;
+        keys.forEach((item) => {
+          const { price, quantity } = cart[item];
+          const sub = price * quantity;
+          total += sub;
+          html +=
+            `<tr><td>${item}</td><td>${formatCurrency(
+              price
+            )}</td><td>${quantity}</td><td>${formatCurrency(sub)}</td>` +
+            `<td><button class='btn-action btn-decrease' onclick="changeQty('${item}',-1)">➖</button>` +
+            `<button class='btn-action btn-increase' onclick="changeQty('${item}',1)">➕</button>` +
+            `<button class='btn-action btn-delete' onclick="deleteItem('${item}')">❌</button></td></tr>`;
+        });
+        html += `</tbody></table><p><strong>總金額：</strong>NTD ${formatCurrency(
+          total
+        )}</p>`;
+        cartDiv.innerHTML = html;
+        btnSubmit.style.display = "inline-block";
+        btnReload.style.display = "inline-block";
+      }
+
+      function changeQty(item, delta) {
+        cart[item].quantity += delta;
+        if (cart[item].quantity <= 0) delete cart[item];
+        renderCart();
+      }
+      function deleteItem(item) {
+        delete cart[item];
+        renderCart();
+      }
+
+      function submitOrder() {
+        const name = document.getElementById("name").value.trim();
+        if (!name) return alert("請填寫姓名");
+        const address = document.getElementById("address").value.trim();
+        if (!address) return alert("請填寫送貨地址");
+        if (!Object.keys(cart).length) return alert("請選擇商品");
+
+        const orderId = getTimestampId();
+        let total = 0;
+        const details = Object.entries(cart).map(
+          ([item, { price, quantity }]) => {
+            const subtotal = price * quantity;
+            total += subtotal;
+            return { item, price, quantity, subtotal };
+          }
+        );
+        history.push({ orderId, name, address, total, details });
+        lastOrderId = orderId;
+        lastTotal = total;
+
+        const finalDiv = document.getElementById("final-order");
+        let html = `<p><strong>訂購者：</strong>${name}</p><p><strong>送貨地址：</strong>${address}</p>`;
+        html += `<table id='reportTable'><thead><tr><th>商品</th><th>單價</th><th>數量</th><th>小計</th></tr></thead><tbody>`;
+        details.forEach((r) => {
+          html += `<tr><td>${r.item}</td><td>${formatCurrency(
+            r.price
+          )}</td><td>${r.quantity}</td><td>${formatCurrency(
+            r.subtotal
+          )}</td></tr>`;
+        });
+        html += `</tbody></table><p id='total-text'><strong>總金額：</strong>NTD ${formatCurrency(
+          total
+        )}</p>`;
+        finalDiv.innerHTML = html;
+
+        // 禁用按鈕避免重複送出
+        const submitBtn = document.getElementById("submit-button");
+        submitBtn.disabled = true;
+        submitBtn.style.background = "#aaa";
+        submitBtn.style.cursor = "not-allowed";
+        submitBtn.textContent = "已送出，若需再下訂，請重整網頁";
+
+        sendToGoogleForm(orderId, name, address, total, details);
+      }
+      {
+        cart = {};
+        document.getElementById("cart").innerHTML = "";
+        document.getElementById("submit-button").style.display = "none";
+      }
+
+      // ------- 自動填寫 Google Form (jQuery) -------
+      // 請替換為你的 Google Form formResponse URL 及 entry 欄位 ID
+      function sendToGoogleForm(orderId, name, address, total, details) {
+        const detailText = details
+          .map((d) => `${d.item} x${d.quantity}（${d.price}）`)
+          .join("＋");
+
+        // 建立 jQuery 表單物件
+        const $f = $("<form>", {
+          method: "POST",
+          action:
+            "https://docs.google.com/forms/d/e/1FAIpQLSfiMWAdznTAgdw821b33Nr7KWIk7c3LZqh5woxu8dkdVGHNpQ/formResponse",
+          target: "hidden_iframe", // 隱藏 iframe 避免跳轉
+          style: "display:none",
+        });
+
+        // 加入隱藏欄位
+        const fields = [
+          { name: "entry.1548266421", value: orderId }, // 流水號
+          { name: "entry.636255277", value: name }, // 姓名
+          { name: "entry.578159224", value: address }, // 地址
+          { name: "entry.71034697", value: total }, // 總金額
+          { name: "entry.16202025", value: detailText }, // 商品明細
+        ];
+
+        fields.forEach((f) => {
+          $f.append(
+            $("<input>", {
+              type: "hidden",
+              name: f.name,
+              value: f.value,
+            })
+          );
+        });
+
+        // 加入網頁並送出
+        $("body").append($f);
+        $f.submit();
+
+        // 提示訊息與重置
+        alert("✅ 訂單已送出，感謝您的訂購！");
+      }
+
+      function renderHistory(f = "") {
+        if (!history.length)
+          return (document.getElementById("history").innerHTML = "");
+        let html = "<h3>📖 訂單紀錄</h3>";
+        history.forEach((o) => {
+          if (f && o.name !== f) return;
+          html += `<div style='border:1px solid #ccc;padding:10px;margin-bottom:15px'><p><strong>訂單號：</strong>${o.orderId}</p><p><strong>訂購者：</strong>${o.name}</p><p><strong>送貨地址：</strong>${o.address}</p>`;
+          html += `<table><tr><th>商品</th><th>單價</th><th>數量</th><th>小計</th></tr>`;
+          o.details.forEach(
+            (r) =>
+              (html += `<tr><td>${r.item}</td><td>${formatCurrency(
+                r.price
+              )}</td><td>${r.quantity}</td><td>${formatCurrency(
+                r.subtotal
+              )}</td></tr>`)
+          );
+          html += `</table><p><strong>總金額：</strong>NTD ${formatCurrency(
+            o.total
+          )}</p></div>`;
+        });
+        document.getElementById("history").innerHTML = out;
+      }
+
+      // 廣告輪播設定
+      const ads = ["原味.jpg", "芝麻.jpg", "黑金剛花生.jpg"];
+      let adIndex = 0;
+      function rotateAds() {
+        adIndex = (adIndex + 1) % ads.length;
+        document.getElementById("ad-image").src = ads[adIndex];
+      }
+      // 每 3 秒輪播一次
+      setInterval(rotateAds, 3000);
+
+      function resetForm() {
+        document.getElementById("name").value = "";
+        document.getElementById("address").value = "";
+        document.getElementById("cart").innerHTML = "<p>尚未選擇商品。</p>";
+        document.getElementById("final-order").innerHTML = "";
+        document.getElementById("submit-button").style.display = "none";
+        cart = {};
+      }
+      function reloadPage() {
+        location.reload(); // ✅ 重新載入整個頁面
+      }
+      // 顯示按鈕邏輯
+      window.onscroll = function () {
+        document.getElementById("toTopBtn").style.display =
+          window.scrollY > 300 ? "block" : "none";
+      };
+
+      // 滑動回頂部功能
+      function scrollToTop() {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+    </script>
+    <iframe name="hidden_iframe" style="display: none"></iframe>
+    <footer class="contact-footer">
+      <div class="contact-info">
+        <p>📧 Email：joan.basque@example.com</p>
+        <p>📞 聯絡電話：0987-987-987</p>
+        <p>🏠 取貨地址：高雄市左營區南屏路269號</p>
+        <p>💬 LINE ID：@joanbasque</p>
+      </div>
+    </footer>
+
+    <button onclick="scrollToTop()" id="toTopBtn" title="回到最上層">
+      <img src="蛋糕向上.png" alt="回頂部" />
+    </button>
+  </body>
+</html>
